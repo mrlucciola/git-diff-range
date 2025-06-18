@@ -2,50 +2,18 @@
 
 set -eu
 
-# cat parts/header.sh parts/helpers.sh parts/main.sh >dist/git-diff-range
-# chmod +x dist/git-diff-range
-# ln -sf "$HOME/engineering/tools/dist/git-diff-range" "$HOME/.local/bin/util-scripts/git-diff-range"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SRC_DIR="$SCRIPT_DIR/src"
+DIST_DIR="$SCRIPT_DIR/dist"
+OUT_FILE="$DIST_DIR/git-diff-range"
+BIN_LINK="$HOME/.local/bin/util-scripts/git-diff-range"
 
-######################################################
-################# Resolve Script Dir #################
-# Supports bash/zsh/dash etc
-SCRIPT_PATH="$0"
-case "$SCRIPT_PATH" in
-/*) SCRIPT_DIR=$(dirname "$SCRIPT_PATH") ;;
-*) SCRIPT_DIR=$(cd "$(dirname "$SCRIPT_PATH")" && pwd) ;;
-esac
-################# Resolve Script Dir #################
-######################################################
-
-##################################################
-##################### Config #####################
-ROOT_DIR="$SCRIPT_DIR"
-SRC_DIR="$ROOT_DIR/src"
-DIST_DIR="$ROOT_DIR/dist"
-OUTPUT_FILE="$DIST_DIR/git-diff-range"
-BIN_DIR="$HOME/.local/bin/util-scripts"
-LINK_NAME="$BIN_DIR/git-diff-range"
-##################### Config #####################
-##################################################
-
-#################################################
-##################### Setup #####################
 mkdir -p "$DIST_DIR"
-mkdir -p "$BIN_DIR"
-##################### Setup #####################
-#################################################
+mkdir -p "$(dirname "$BIN_LINK")"
 
-#################################################
-##################### Build #####################
-echo "Building $OUTPUT_FILE..."
-cat "$SRC_DIR"/*.sh >"$OUTPUT_FILE"
+cat "$SRC_DIR"/*.sh "$SCRIPT_DIR/main.sh" >"$OUT_FILE"
 
-# Set as executable
-chmod +x "$OUTPUT_FILE"
+chmod +x "$OUT_FILE"
+ln -sf "$OUT_FILE" "$BIN_LINK"
 
-# Symlink
-ln -sf "$OUTPUT_FILE" "$LINK_NAME"
-##################### Build #####################
-#################################################
-
-echo "Built and linked to $LINK_NAME"
+echo "Built and linked to $BIN_LINK"

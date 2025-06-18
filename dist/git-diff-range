@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Default values
+start_ref=""
+end_ref=""
+repo_path="$(pwd)"
+out_path=""
+verbose="false"
+
+# Print usage
+usage() {
+  echo "Usage: $0 [-start-ref <git-ref>] [-end-ref <git-ref>] [-repo-path <path>] [-out-path <file>] [-v]"
+  exit 1
+}
+
+# Parse args
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  -start-ref)
+    start_ref="$2"
+    shift 2
+    ;;
+  -end-ref)
+    end_ref="$2"
+    shift 2
+    ;;
+  -repo-path)
+    repo_path="$2"
+    shift 2
+    ;;
+  -out-path)
+    out_path="$2"
+    shift 2
+    ;;
+  -v)
+    verbose="true"
+    shift
+    ;;
+  *) usage ;;
+  esac
+done
+
+# Validate repo
+if [[ ! -d "$repo_path/.git" ]]; then
+  echo "Error: '$repo_path' is not a valid Git repo." >&2
+  exit 1
+fi
+
+cd "$repo_path"
+
+# Fill in defaults
+end_ref="${end_ref:-HEAD}"
+start_ref="${start_ref:-$(
+  git rev-parse "$end_ref"^{commit}^ 2>/dev/null ||
+    {
+      echo "Error: Unable to find previous commit of '$end_ref'" >&2
+      exit 1
+    }
+)}"
+
+# Validate refs
+if ! git cat-file -e "$start_ref"^{commit} 2>/dev/null; then
+  echo "Error: Invalid start-ref '$start_ref'" >&2
+  exit 1
+fi
+
+if ! git cat-file -e "$end_ref"^{commit} 2>/dev/null; then
+  echo "Error: Invalid end-ref '$end_ref'" >&2
+  exit 1
+fi
+
+# Get diff
+diff_output="$(git diff "$start_ref" "$end_ref")"
+
+# Output
+if [[ -n "$out_path" ]]; then
+  echo "$diff_output" >"$out_path"
+  if [[ "$verbose" == "true" ]]; then
+    echo "$diff_output"
+  fi
+else
+  echo "$diff_output"
+fi
+#!/bin/sh
+
+resolve_defaults() {
+  cd "$REPO_PATH"
+
+  [ -z "$END_REF" ] && END_REF="HEAD"
+
+  if [ -z "$START_REF" ]; then
+    PREV_COMMIT=$(git rev-parse "$END_REF^" 2>/dev/null || true)
+    if [ -z "$PREV_COMMIT" ]; then
+      echo "Error: No previous commit found for '$END_REF'" >&2
+      exit 1
+    fi
+    START_REF="$PREV_COMMIT"
+  fi
+}
+#!/bin/sh
+
+run_git_diff() {
+  cd "$REPO_PATH"
+  DIFF_OUTPUT=$(git diff "$START_REF" "$END_REF")
+}
+#!/bin/sh
+
+handle_output() {
+  if [ -n "$OUT_PATH" ]; then
+    echo "$DIFF_OUTPUT" >"$OUT_PATH"
+    [ "$VERBOSE" = "true" ] && echo "$DIFF_OUTPUT"
+  else
+    echo "$DIFF_OUTPUT"
+  fi
+}
+#!/bin/sh
+
+parse_args() {
+  START_REF=""
+  END_REF=""
+  REPO_PATH="$(pwd)"
+  OUT_PATH=""
+  VERBOSE="false"
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+    -start-ref)
+      START_REF="$2"
+      shift 2
+      ;;
+    -end-ref)
+      END_REF="$2"
+      shift 2
+      ;;
+    -repo-path)
+      REPO_PATH="$2"
+      shift 2
+      ;;
+    -out-path)
+      OUT_PATH="$2"
+      shift 2
+      ;;
+    -v)
+      VERBOSE="true"
+      shift
+      ;;
+    *)
+      echo "Invalid argument: $1" >&2
+      exit 1
+      ;;
+    esac
+  done
+}
+#!/bin/sh
+
+validate_repo() {
+  if [ ! -d "$1/.git" ]; then
+    echo "Error: '$1' is not a Git repo." >&2
+    exit 1
+  fi
+}
+
+validate_git_ref() {
+  if ! git -C "$1" cat-file -e "$2^{commit}" 2>/dev/null; then
+    echo "Error: Invalid git ref '$2'" >&2
+    exit 1
+  fi
+}
+#!/bin/sh
+
+# Entrypoint: calls `parse_args`, `run_git_diff`
+
+# Source all modules
+# SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# for file in "$SCRIPT_DIR/src"/*.sh; do
+#   . "$file"
+# done
+
+main() {
+  parse_args "$@"
+  validate_repo "$REPO_PATH"
+  validate_git_ref "$REPO_PATH" "$END_REF"
+  validate_git_ref "$REPO_PATH" "$START_REF"
+  resolve_defaults
+  run_git_diff
+  handle_output
+}
+
+main "$@"

@@ -3,11 +3,10 @@
 # Entrypoint: calls `parse_args`, `run_git_diff`
 
 # Source all modules
-. "$(dirname "$0")/parse-args.sh"
-. "$(dirname "$0")/validate.sh"
-. "$(dirname "$0")/defaults.sh"
-. "$(dirname "$0")/git.sh"
-. "$(dirname "$0")/output.sh"
+# SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# for file in "$SCRIPT_DIR/src"/*.sh; do
+#   . "$file"
+# done
 
 main() {
   parse_args "$@"

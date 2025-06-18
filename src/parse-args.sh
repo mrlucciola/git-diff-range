@@ -68,8 +68,13 @@ parse_args() {
       VERBOSE="true"
       shift
       ;;
+    -h | --help)
+      print_help
+      exit 0
+      ;;
     *)
-      echo "Invalid argument: $1" >&2
+      echo "Error: Unknown argument: $1" >&2
+      print_help >&2
       exit 1
       ;;
     esac

@@ -11,9 +11,9 @@
 main() {
   parse_args "$@"
   validate_repo "$REPO_PATH"
+  resolve_defaults
   validate_git_ref "$REPO_PATH" "$END_REF"
   validate_git_ref "$REPO_PATH" "$START_REF"
-  resolve_defaults
   run_git_diff
   handle_output
 }

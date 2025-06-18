@@ -1,40 +1,5 @@
 #!/bin/sh
 
-# -----------------------------------------------------------------------------
-# Function: resolve_defaults
-#
-# Sets default values for START_REF and END_REF if not provided by user.
-# END_REF defaults to "HEAD".
-# START_REF defaults to the commit before END_REF.
-#
-# Globals Used:
-#   REPO_PATH, START_REF, END_REF
-#
-# Globals Set:
-#   START_REF, END_REF
-# -----------------------------------------------------------------------------
-resolve_defaults() {
-  # Determine effective END_REF
-  [ -z "$END_REF" ] && END_REF="HEAD"
-
-  # Resolve START_REF as previous commit if not provided
-  if [ -z "$START_REF" ]; then
-    prev_commit=$(git -C "$REPO_PATH" rev-parse "$END_REF^" 2>/dev/null || true)
-    if [ -z "$prev_commit" ]; then
-      echo "Error: No previous commit found for '$END_REF'" >&2
-      exit 1
-    fi
-    START_REF="$prev_commit"
-  fi
-}
-#!/bin/sh
-
-run_git_diff() {
-  cd "$REPO_PATH"
-  DIFF_OUTPUT=$(git diff "$START_REF" "$END_REF")
-}
-#!/bin/sh
-
 handle_output() {
   if [ -n "$OUT_PATH" ]; then
     echo "$DIFF_OUTPUT" >"$OUT_PATH"
@@ -119,6 +84,58 @@ parse_args() {
       ;;
     esac
   done
+}
+#!/bin/sh
+
+# -----------------------------------------------------------------------------
+# Function: resolve_defaults
+#
+# Sets default values for START_REF and END_REF if not provided by user.
+# END_REF defaults to "HEAD".
+# START_REF defaults to the commit before END_REF.
+#
+# Globals Used:
+#   REPO_PATH, START_REF, END_REF
+#
+# Globals Set:
+#   START_REF, END_REF
+# -----------------------------------------------------------------------------
+resolve_defaults() {
+  # Determine effective END_REF
+  [ -z "$END_REF" ] && END_REF="HEAD"
+
+  # Resolve START_REF as previous commit if not provided
+  if [ -z "$START_REF" ]; then
+    prev_commit=$(git -C "$REPO_PATH" rev-parse "$END_REF^" 2>/dev/null || true)
+    if [ -z "$prev_commit" ]; then
+      echo "Error: No previous commit found for '$END_REF'" >&2
+      exit 1
+    fi
+    START_REF="$prev_commit"
+  fi
+}
+#!/bin/sh
+
+# -----------------------------------------------------------------------------
+# Function: run_git_diff
+#
+# Generates a Git diff between START_REF and END_REF in the specified REPO_PATH.
+#
+# Globals Used:
+#   REPO_PATH, START_REF, END_REF
+#
+# Globals Set:
+#   DIFF_OUTPUT
+#
+# Notes:
+# - Uses 'git -C' to avoid changing the global working directory.
+# - Exits on error if the diff cannot be generated.
+# -----------------------------------------------------------------------------
+run_git_diff() {
+  if ! DIFF_OUTPUT=$(git -C "$REPO_PATH" diff "$START_REF" "$END_REF"); then
+    echo "Error: Failed to generate diff from '$START_REF' to '$END_REF' in repo '$REPO_PATH'" >&2
+    exit 1
+  fi
 }
 #!/bin/sh
 

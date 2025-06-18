@@ -1,8 +1,14 @@
 #!/bin/sh
 
+# Params:
+# 1. "$REPO_PATH"
+#
+# Called as: validate_repo "$REPO_PATH"
 validate_repo() {
-  if [ ! -d "$1/.git" ]; then
-    echo "Error: '$1' is not a Git repo." >&2
+  repo_path="$1"
+
+  if [ ! -d "$repo_path/.git" ]; then
+    echo "Error: '$repo_path' is not a Git repo." >&2
     exit 1
   fi
 }

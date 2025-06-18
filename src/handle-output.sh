@@ -14,7 +14,8 @@
 # -----------------------------------------------------------------------------
 handle_output() {
   if [ -n "$OUT_PATH" ]; then
-    if ! printf "%s\n" "$DIFF_OUTPUT" >"$OUT_PATH"; then
+    # Strip color for file output
+    if ! printf "%s\n" "$DIFF_OUTPUT" | sed -E 's/\x1B\[[0-9;]*m//g' >"$OUT_PATH"; then
       echo "Error: Failed to write to '$OUT_PATH'" >&2
       exit 1
     fi

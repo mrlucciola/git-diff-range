@@ -14,7 +14,8 @@
 # -----------------------------------------------------------------------------
 handle_output() {
   if [ -n "$OUT_PATH" ]; then
-    if ! printf "%s\n" "$DIFF_OUTPUT" >"$OUT_PATH"; then
+    # Strip color for file output
+    if ! printf "%s\n" "$DIFF_OUTPUT" | sed -E 's/\x1B\[[0-9;]*m//g' >"$OUT_PATH"; then
       echo "Error: Failed to write to '$OUT_PATH'" >&2
       exit 1
     fi
@@ -148,7 +149,7 @@ resolve_defaults() {
 # - Exits on error if the diff cannot be generated.
 # -----------------------------------------------------------------------------
 run_git_diff() {
-  if ! DIFF_OUTPUT=$(git -C "$REPO_PATH" diff "$START_REF" "$END_REF"); then
+  if ! DIFF_OUTPUT=$(git -C "$REPO_PATH" diff --color=always "$START_REF" "$END_REF"); then
     echo "Error: Failed to generate diff from '$START_REF' to '$END_REF' in repo '$REPO_PATH'" >&2
     exit 1
   fi

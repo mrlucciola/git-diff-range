@@ -16,7 +16,7 @@
 # - Exits on error if the diff cannot be generated.
 # -----------------------------------------------------------------------------
 run_git_diff() {
-  if ! DIFF_OUTPUT=$(git -C "$REPO_PATH" diff "$START_REF" "$END_REF"); then
+  if ! DIFF_OUTPUT=$(git -C "$REPO_PATH" diff --color=always "$START_REF" "$END_REF"); then
     echo "Error: Failed to generate diff from '$START_REF' to '$END_REF' in repo '$REPO_PATH'" >&2
     exit 1
   fi
